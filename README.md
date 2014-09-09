@@ -22,5 +22,5 @@ There are also some hard-coded S3 URLs in the WordPress backup scripts. Be sure 
 <ul>
 <li>Currently, the playbook only supports HTTP sites.</li>
 <li>This playbook was written for Ubuntu 14.04 LTS. It has been tested with Linode's images for this version.</li>
-<li>The included MariaDB configuration is based on Linode's Stack Script to limit MySQL RAM usage. The included configuration file is based on the machine having 1GB of memory available.<li>
+<li>The included MariaDB configuration is based on Linode's Stack Script to limit MySQL RAM usage. The included configuration file is based on the machine having 1GB of memory available.</li>
 </ul>
