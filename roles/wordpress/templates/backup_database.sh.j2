@@ -1,0 +1,16 @@
+#!/bin/bash
+ 
+NOW=$(date +"%Y-%m-%d-%H%M")
+ 
+DB_USER="{{ item.db_user }}"
+DB_PASS="{{ item.db_password }}"
+DB_NAME="{{ item.db }}"
+DB_HOST="localhost"
+
+DB_FILE="$DB_NAME-$NOW.sql.tar.gz"
+ 
+mysqldump -h$DB_HOST -u$DB_USER -p$DB_PASS $DB_NAME > /tmp/$DB_FILE
+
+s3cmd put /tmp/$DB_FILE s3://config.test.com/{{ item.name }}/mysql/$DB_FILE
+
+rm /tmp/$DB_FILE

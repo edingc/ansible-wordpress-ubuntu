@@ -1,0 +1,18 @@
+#!/bin/bash
+ 
+NOW=$(date +"%Y-%m-%d-%H%M")
+ 
+DB_USER="{{ item.db_user }}"
+DB_PASS="{{ item.db_password }}"
+DB_NAME="{{ item.db }}"
+DB_HOST="localhost"
+ 
+TREE_FILE="{{ item.name }}-wp_content-$NOW.tar.gz"
+ 
+WWW_DIR="{{ item.web_root }}/wordpress/wp-content"
+ 
+tar -czvf /tmp/$TREE_FILE $WWW_DIR
+ 
+s3cmd put /tmp/$TREE_FILE s3://config.test.com/{{ item.name }}/wp-content/$TREE_FILE
+ 
+rm /tmp/$TREE_FILE

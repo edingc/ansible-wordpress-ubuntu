@@ -1,0 +1,24 @@
+---
+- name: ensure php5-fpm and dependencies are installed and up-to-date
+  apt: name={{ item }} state=latest
+  with_items:
+    - php5
+    - php5-common
+    - php5-fpm
+    - php-apc
+    - php5-apcu
+    - php5-curl
+    - php5-gd
+    - php5-enchant
+    - php5-mysql
+    - php5-xmlrpc 
+    - libphp-phpmailer
+    - libphp-simplepie
+    - libssh2-php
+ 
+- name: ensure php5-fpm settings are configured
+  template: src=php5-fpm.j2 dest=/etc/php5/fpm/conf.d/php5-fpm.conf
+  notify: restart php-fpm
+
+- name: ensure php5-fpm service is started and enabled
+  service: name=php5-fpm state=started enabled=yes

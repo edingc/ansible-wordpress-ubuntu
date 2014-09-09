@@ -1,0 +1,53 @@
+---
+# file: roles/common/tasks/main.yml
+
+- name: ensure the hostname is set
+  hostname: name="{{ hostname }}"
+
+- name: ensure ufw is installed
+  apt: name=ufw state=latest
+  
+- name: ensure SSH port is opened
+  ufw: rule=allow port=22 proto=tcp
+
+- name: ensure ufw denys all by default  
+  ufw: state=enabled policy=deny
+
+- name: ensure ntp is installed and up-to-date
+  apt: name=ntp state=latest
+
+- name: ensure ntpd is running and enabled
+  service: name=ntp state=running enabled=yes
+
+- name: ensure wget is installed and up-to-date
+  apt: name=wget state=latest
+
+- name: ensure nano is installed and up-to-date
+  apt: name=nano state=latest
+
+- name: ensure s3cmd is installed and up-to-date
+  apt: name=s3cmd state=latest
+  
+- name: ensure s3cmd is configured for root
+  copy: src=.s3cfg dest=/root/.s3cfg
+  
+- name: ensure s3cmd is configured for joe
+  copy: src=.s3cfg dest=/home/joe/.s3cfg
+
+- name: ensure fail2ban is installed and up-to-date
+  apt: name=fail2ban state=latest
+  
+- name: ensure landscape-common is installed and up-to-date (system information at log on)
+  apt: name=landscape-common state=latest
+  
+- name: ensure ssmtp is installed and up-to-date
+  apt: name=ssmtp state=latest
+  
+- name: ensure ssmtp settings are configured
+  copy: src=ssmtp.conf dest=/etc/ssmtp/ssmtp.conf
+  
+- name: ensure ssmtp aliases are configured
+  copy: src=revaliases dest=/etc/ssmtp/revaliases
+  
+- name: ensure sudo is installed and up-to-date
+  apt: name=sudo state=latest

@@ -1,0 +1,11 @@
+---
+# file: wordpress.yml
+- hosts: wordpress
+  remote_user: joe
+  sudo: yes
+  roles:
+    - common
+    - nginx
+    - php-fpm
+    - mariadb
+    - wordpress

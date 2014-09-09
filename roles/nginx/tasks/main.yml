@@ -1,0 +1,17 @@
+---
+- name: ensure nginx is installed and up-to-date
+  apt: name=nginx state=latest
+  
+- name: ensure nginx settings are configured
+  template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
+  notify: restart nginx
+  
+- name: ensure default.conf is removed
+  file: path=/etc/nginx/conf.d/default.conf state=absent
+
+- name: ensure nginx is started and enabled
+  service: name=nginx state=started enabled=yes
+
+- name: ensure www port is opened
+  ufw: rule=allow port=80 proto=tcp
+  notify: restart ufw

@@ -1,0 +1,13 @@
+#!/bin/bash
+ 
+NOW=$(date +"%Y-%m-%d-%H%M")
+ 
+TREE_FILE="{{ item.name }}-$NOW.tar.gz"
+ 
+WWW_DIR="{{ item.web_root }}/html"
+ 
+tar -czvf /tmp/$TREE_FILE $WWW_DIR
+ 
+s3cmd put /tmp/$TREE_FILE s3://config.test.com/{{ item.name }}/html/$TREE_FILE
+ 
+rm /tmp/$TREE_NAME

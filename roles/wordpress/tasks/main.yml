@@ -1,0 +1,89 @@
+---
+
+- name: copy nginx configuration for WordPress
+  template: src=wordpress.conf.j2 dest=/etc/nginx/sites-enabled/{{ item.name }}.conf
+  with_items: wordpress_sites
+  notify: restart nginx
+
+- name: ensure wordpress directories are created
+  command: mkdir -p "{{ item.web_root }}" creates="{{ item.web_root }}"
+  with_items: wordpress_sites
+
+- name: download the latest wordpress release
+  get_url: url=http://wordpress.org/latest.tar.gz dest="{{ item.web_root }}"/latest.tar.gz
+  with_items: wordpress_sites
+
+- name: ensure wordpress is up-to-date
+  command: chdir="{{ item.web_root }}" /bin/tar xvf latest.tar.gz
+  with_items: wordpress_sites
+
+- name: ensure group for site exists
+  group: name="{{ item.name }}"
+  with_items: wordpress_sites
+
+- name: ensure user for site exists
+  user: name="{{ item.name }}" group="{{ item.name }}" home="{{ item.web_root }}" password="{{ item.crypted_password }}"
+  with_items: wordpress_sites
+
+- name: ensure www-data user is part of the wordpress group
+  command: usermod -a -G {{ item.name }} www-data
+  with_items: wordpress_sites
+
+- name: ensure web root is owned by site user
+  file: path="{{ item.web_root }}" owner="{{ item.name }}" group="{{ item.name }}" state=directory recurse=yes
+  with_items: wordpress_sites
+
+- name: fetch random salts for wordpress config (breaks all cookies)
+  local_action: command curl https://api.wordpress.org/secret-key/1.1/salt/
+  register: wp_salt 
+
+- name: ensure site wordpress database exists
+  mysql_db: name="{{ item.db }}" state=present
+  with_items: wordpress_sites
+
+- name: ensure site wordpress database user exists
+  mysql_user: name="{{ item.db_user }}" password="{{ item.db_password }}" priv="{{ item.db_user }}".*:ALL host='localhost' state=present
+  with_items: wordpress_sites
+
+- name: ensure wordpress is configured
+  template: src=wp-config.php.j2 dest={{ item.web_root }}/wordpress/wp-config.php
+  with_items: wordpress_sites
+
+- name: ensure python-magic and dependencies are installed and up-to-date
+  apt: name=python-magic state=latest
+  
+- name: ensure wordpress database backup script exists
+  template: src=backup_database.sh.j2 dest={{ item.web_root }}/{{ item.name }}_backup_database.sh
+  with_items: wordpress_sites
+
+- name: ensure wordpress database backup script is executable
+  command: chmod +x {{ item.web_root }}/{{ item.name }}_backup_database.sh
+  with_items: wordpress_sites
+
+- name: ensure wordpress content backup script exists
+  template: src=backup_wp-content.sh.j2 dest={{ item.web_root }}/{{ item.name }}_backup_wp-content.sh
+  with_items: wordpress_sites
+  
+- name: ensure wordpress content backup script is executable
+  command: chmod +x {{ item.web_root }}/{{ item.name }}_backup_wp-content.sh
+  with_items: wordpress_sites
+
+- name: ensure wordpress database backup is scheduled nightly
+  cron: name="{{ item.name }} WordPress Database Backup" weekday="*" minute=0 hour=2 user="root" job="{{ item.web_root }}/{{ item.name }}_backup_database.sh" cron_file={{ item.name }}_database_backup
+  with_items: wordpress_sites
+
+- name: ensure wordpress content backup is scheduled each saturday night
+  cron: name="{{ item.name }} WordPress Content Backup" weekday="7" minute=0 hour=1 user="root" job="{{ item.web_root }}/{{ item.name }}_backup_wp-content.sh" cron_file={{ item.name }}_content_backup
+  with_items: wordpress_sites
+
+- name: ensure wordpress directories are correctly permissioned
+  command: find {{ item.web_root }}/wordpress -type d -exec chmod 755 {} \;
+  with_items: wordpress_sites
+
+- name: ensure wordpress files are correctly permissioned
+  command: find {{ item.web_root }}/wordpress -type f -exec chmod 644 {} \;
+  with_items: wordpress_sites
+
+- name: ensure wp-content files are correctly permissioned
+  command: chmod -R 775 {{ item.web_root }}/wordpress/wp-content
+  with_items: wordpress_sites

@@ -1,0 +1,35 @@
+---
+
+- name: ensure nginx configs for html sites exist
+  template: src=html.conf.j2 dest=/etc/nginx/sites-enabled/{{ item.name }}.conf
+  with_items: html_sites
+  ignore_errors: yes
+  notify: restart nginx  
+
+- name: ensure web root directories are created
+  command: mkdir -p "{{ item.web_root }}/html" creates="{{ item.web_root }}/html"
+  with_items: html_sites
+
+- name: ensure site group exists
+  group: name="{{ item.name }}"
+  with_items: html_sites
+
+- name: ensure site user exists
+  user: name="{{ item.name }}" group="{{ item.name }}" home="{{ item.web_root }}"
+  with_items: html_sites
+
+- name: ensure site web root is owned by the proper account
+  file: path="{{ item.web_root }}" owner="{{ item.name }}" group="{{ item.name }}" state=directory recurse=yes
+  with_items: html_sites
+
+- name: ensure html content backup script exists
+  template: src=backup_content.sh.j2 dest={{ item.web_root }}/{{ item.name }}_backup_content.sh
+  with_items: html_sites
+  
+- name: ensure html content backup script is executable
+  command: chmod +x {{ item.web_root }}/{{ item.name }}_backup_content.sh
+  with_items: html_sites
+
+- name: html content backup is scheduled each saturday night
+  cron: name="{{ item.name }} HTML Content Backup" weekday="7" minute=0 hour=1 user="root" job="{{ item.web_root }}/{{ item.name }}_backup_content.sh" cron_file={{ item.name }}_content_backup
+  with_items: html_sites

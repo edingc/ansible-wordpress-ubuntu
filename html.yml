@@ -1,0 +1,9 @@
+---
+# file: html.yml
+- hosts: html
+  remote_user: joe
+  sudo: yes
+  roles:
+    - common
+    - nginx
+    - html

@@ -1,0 +1,39 @@
+---
+
+- name: ensure all mariadb packages are installed and up-to-date
+  apt: name="{{ item }}" state=latest
+  with_items:
+    - mariadb-client
+    - mariadb-server
+    - mariadb-common
+    - python-mysqldb
+  
+- name: ensure mariadb service is running and enabled
+  service: name=mysql state=running enabled=yes
+
+- name: update mariadb root password
+  mysql_user: name=root host="{{ item }}" password="{{ mysql_root_pw }}" priv=*.*:ALL,GRANT
+  with_items:
+    - $ansible_hostname
+    - 127.0.0.1
+    - ::1
+    - localhost
+  
+- name: ensure mariadb settings are configured
+  template: src=my.cnf.j2 dest=/etc/mysql/my.cnf owner=root group=root mode=0644
+  
+- name: ensure .my.cnf exists for joe (needed for idemopotency)
+  action: template src=user-my-cnf.j2 dest=/home/joe/.my.cnf
+  
+- name: ensure .my.cnf exists for root (needed for idemopotency)
+  action: template src=user-my-cnf.j2 dest=/root/.my.cnf
+  
+- name: ensure anonymous users are removed from mariadb
+  mysql_user: name='' host="{{ item }}" state=absent
+  with_items:
+    - localhost
+    - $inventory_hostname
+  
+- name: ensure mariadb test database is removed
+  mysql_db: name=test state=absent
+

@@ -1,0 +1,4 @@
+---
+# file: site.yml
+- include: wordpress.yml
+- include: html.yml
