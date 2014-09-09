@@ -7,7 +7,7 @@ A basic ansible playbook that creates both HTML and WordPress based sites using 
 	<li>PHP-FPM</li>
 	<li>PHP APC Cache</li>
 	<li>MariaDB</li>
-<ul>
+</ul>
 
 Also included are scripts to backup WordPress to Amazon S3 using s3cmd.
 
